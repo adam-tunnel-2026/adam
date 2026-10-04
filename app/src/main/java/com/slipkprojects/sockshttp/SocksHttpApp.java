@@ -25,8 +25,8 @@ public class SocksHttpApp extends Application
 	private static final String TAG = SocksHttpApp.class.getSimpleName();
 	public static final String PREFS_GERAL = "SocksHttpGERAL";
 	
-	public static final String ADS_UNITID_INTERSTITIAL_MAIN = "ca-app-pub-6560862030501171/1687567442";
-	public static final String ADS_UNITID_BANNER_MAIN = "ca-app-pub-6560862030501171/3101206569";
+	public static final String ADS_UNITID_INTERSTITIAL_MAIN = "ca-app-pub-1106018165727912/5102518905";
+	public static final String ADS_UNITID_BANNER_MAIN = "ca-app-pub-1106018165727912/5102518905";
 	public static final String ADS_UNITID_BANNER_SOBRE = "ca-app-pub-6560862030501171/6860519994";
 	public static final String ADS_UNITID_BANNER_TEST = "ca-app-pub-3940256099942544/6300978111";
 	public static final String APP_FLURRY_KEY = "RQQ8J9Q2N4RH827G32X9";
