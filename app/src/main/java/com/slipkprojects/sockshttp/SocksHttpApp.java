@@ -23,7 +23,7 @@ import com.slipkprojects.sockshttp.preference.LocaleHelper;
 public class SocksHttpApp extends Application
 {
 	private static final String TAG = SocksHttpApp.class.getSimpleName();
-	public static final String PREFS_GERAL = "SocksHttpGERAL";
+	public static final String PREFS_GERAL = "https://raw.githubusercontent.com/adam-tunnel-2026/adam/refs/heads/master/config.json";
 	
 	public static final String ADS_UNITID_INTERSTITIAL_MAIN = "ca-app-pub-1106018165727912/5102518905";
 	public static final String ADS_UNITID_BANNER_MAIN = "ca-app-pub-1106018165727912/5102518905";
