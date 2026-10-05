@@ -10,16 +10,16 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: Set up JDK 8
         uses: actions/setup-java@v4
         with:
-          java-version: "17"
+          java-version: "8"
           distribution: "temurin"
 
       - name: Install Android SDK
@@ -34,18 +34,10 @@ jobs:
 
           "$SDKMANAGER" --sdk_root="$ANDROID_SDK_ROOT" \
             "platforms;android-28" \
-            "platforms;android-33" \
             "build-tools;28.0.3" \
-            "build-tools;33.0.0" \
             "platform-tools"
 
-      - name: Set up JDK 8
-        uses: actions/setup-java@v4
-        with:
-          java-version: "8"
-          distribution: "temurin"
-
-      - name: Prepare Gradle
+      - name: Build APK
         shell: bash
         run: |
           export ANDROID_SDK_ROOT="/usr/local/lib/android/sdk"
@@ -62,15 +54,6 @@ jobs:
           echo "=== GRADLE ==="
           ./gradlew --version
 
-      - name: Build APK and save complete log
-        shell: bash
-        run: |
-          export ANDROID_SDK_ROOT="/usr/local/lib/android/sdk"
-          export ANDROID_HOME="/usr/local/lib/android/sdk"
-
-          export JAVA_HOME="$(dirname "$(dirname "$(readlink -f "$(which java)")")")"
-          export PATH="$JAVA_HOME/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH"
-
           echo "=== CHECK API 28 ==="
           test -d "$ANDROID_SDK_ROOT/platforms/android-28"
           echo "API 28 OK"
@@ -80,31 +63,7 @@ jobs:
           echo "Build Tools 28.0.3 OK"
 
           echo "=== BUILD APK ==="
-
-          set +e
-
-          ./gradlew assembleDebug --stacktrace --info > build.log 2>&1
-
-          STATUS=$?
-
-          echo "=== GRADLE EXIT CODE ==="
-          echo "$STATUS"
-
-          echo "=== COMPILER / BUILD ERRORS ==="
-          grep -n -E "error:|ERROR|FAILURE|Exception|cannot find symbol|does not exist|Could not" build.log | tail -n 100 || true
-
-          echo "=== LAST 300 LINES ==="
-          tail -n 300 build.log
-
-          exit $STATUS
-
-      - name: Upload complete Gradle log
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: gradle-complete-log
-          path: build.log
-          if-no-files-found: warn
+          ./gradlew assembleDebug --stacktrace --info
 
       - name: Upload APK
         if: success()
