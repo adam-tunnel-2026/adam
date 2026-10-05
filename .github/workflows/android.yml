@@ -36,10 +36,10 @@ jobs:
           echo "=== ACCEPT LICENSES ==="
           yes | "$SDKMANAGER" --sdk_root="$ANDROID_SDK_ROOT" --licenses || true
 
-          echo "=== INSTALL ANDROID 28 ==="
+          echo "=== INSTALL ANDROID 33 ==="
           "$SDKMANAGER" --sdk_root="$ANDROID_SDK_ROOT" \
-            "platforms;android-28" \
-            "build-tools;28.0.3" \
+            "platforms;android-33" \
+            "build-tools;33.0.0" \
             "platform-tools"
 
           echo "=== SDK INSTALLATION COMPLETE ==="
@@ -67,13 +67,13 @@ jobs:
           echo "=== GRADLE VERSION ==="
           ./gradlew --version
 
-          echo "=== CHECK API 28 ==="
-          test -d "$ANDROID_SDK_ROOT/platforms/android-28"
-          echo "API 28 OK"
+          echo "=== CHECK API 33 ==="
+          test -d "$ANDROID_SDK_ROOT/platforms/android-33"
+          echo "API 33 OK"
 
-          echo "=== CHECK BUILD TOOLS 28.0.3 ==="
-          test -d "$ANDROID_SDK_ROOT/build-tools/28.0.3"
-          echo "Build Tools 28.0.3 OK"
+          echo "=== CHECK BUILD TOOLS 33.0.0 ==="
+          test -d "$ANDROID_SDK_ROOT/build-tools/33.0.0"
+          echo "Build Tools 33.0.0 OK"
 
           echo "=== BUILD APK ==="
           ./gradlew assembleDebug --stacktrace --info
