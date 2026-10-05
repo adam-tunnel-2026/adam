@@ -16,10 +16,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK 8
+      - name: Set up JDK 17 for Android SDK
         uses: actions/setup-java@v4
         with:
-          java-version: "8"
+          java-version: "17"
           distribution: "temurin"
 
       - name: Install Android SDK
@@ -30,12 +30,25 @@ jobs:
 
           SDKMANAGER="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
 
+          echo "=== JAVA FOR SDKMANAGER ==="
+          java -version
+
+          echo "=== ACCEPT LICENSES ==="
           yes | "$SDKMANAGER" --sdk_root="$ANDROID_SDK_ROOT" --licenses || true
 
+          echo "=== INSTALL ANDROID 28 ==="
           "$SDKMANAGER" --sdk_root="$ANDROID_SDK_ROOT" \
             "platforms;android-28" \
             "build-tools;28.0.3" \
             "platform-tools"
+
+          echo "=== SDK INSTALLATION COMPLETE ==="
+
+      - name: Set up JDK 8 for Gradle
+        uses: actions/setup-java@v4
+        with:
+          java-version: "8"
+          distribution: "temurin"
 
       - name: Build APK
         shell: bash
@@ -48,10 +61,10 @@ jobs:
 
           chmod +x gradlew
 
-          echo "=== JAVA ==="
+          echo "=== JAVA FOR GRADLE ==="
           java -version
 
-          echo "=== GRADLE ==="
+          echo "=== GRADLE VERSION ==="
           ./gradlew --version
 
           echo "=== CHECK API 28 ==="
