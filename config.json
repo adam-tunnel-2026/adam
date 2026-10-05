@@ -6,37 +6,37 @@
       "country": "Marruecos 🇲🇦",
       "operator": "Inwi *6 Youtube",
       "sni": "://facebook.com",
-      "server_ip": "127.0.0.1"
+      "server_ip": "138.68.80.126"
     },
     {
       "country": "Marruecos 🇲🇦",
       "operator": "Maroc Telecom Ittisalat *6",
       "sni": "://instagram.com",
-      "server_ip": "127.0.0.1"
+      "server_ip": "138.68.80.126"
     },
     {
       "country": "Marruecos 🇲🇦",
       "operator": "Orange *6 Social",
       "sni": "v.whatsapp.net",
-      "server_ip": "127.0.0.1"
+      "server_ip": "138.68.80.126"
     },
     {
       "country": "Argelia 🇩🇿",
       "operator": "Mobilis PixX",
       "sni": "://facebook.com",
-      "server_ip": "127.0.0.1"
+      "server_ip": "138.68.80.126"
     },
     {
       "country": "Túnez 🇹🇳",
       "operator": "Ooredoo Tunisie",
       "sni": "://facebook.com",
-      "server_ip": "127.0.0.1"
+      "server_ip": "138.68.80.126"
     },
     {
       "country": "Egipto 🇪🇬",
       "operator": "Vodafone Flex Social",
       "sni": "://instagram.com",
-      "server_ip": "127.0.0.1"
+      "server_ip": "138.68.80.126"
     }
   ]
 }
