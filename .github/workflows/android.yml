@@ -1,11 +1,12 @@
-```yaml
 name: Android CI
 
 on:
   push:
-    branches: ["master"]
+    branches:
+      - master
   pull_request:
-    branches: ["master"]
+    branches:
+      - master
 
 jobs:
   build:
@@ -54,4 +55,3 @@ jobs:
         with:
           name: adam-tunnel-app
           path: app/build/outputs/apk/debug/app-debug.apk
-```
