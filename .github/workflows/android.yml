@@ -62,22 +62,7 @@ jobs:
           echo "=== GRADLE ==="
           ./gradlew --version
 
-      - name: Show dependency information
-        shell: bash
-        run: |
-          export ANDROID_SDK_ROOT="/usr/local/lib/android/sdk"
-          export ANDROID_HOME="/usr/local/lib/android/sdk"
-
-          export JAVA_HOME="$(dirname "$(dirname "$(readlink -f "$(which java)")")")"
-          export PATH="$JAVA_HOME/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH"
-
-          echo "=== SERVICE DEPENDENCIES ==="
-          ./gradlew :service:dependencies
-
-          echo "=== APP DEPENDENCIES ==="
-          ./gradlew :app:dependencies
-
-      - name: Build APK
+      - name: Build APK and save complete log
         shell: bash
         run: |
           export ANDROID_SDK_ROOT="/usr/local/lib/android/sdk"
@@ -95,9 +80,34 @@ jobs:
           echo "Build Tools 28.0.3 OK"
 
           echo "=== BUILD APK ==="
-          ./gradlew assembleDebug --stacktrace --info
+
+          set +e
+
+          ./gradlew assembleDebug --stacktrace --info > build.log 2>&1
+
+          STATUS=$?
+
+          echo "=== GRADLE EXIT CODE ==="
+          echo "$STATUS"
+
+          echo "=== COMPILER / BUILD ERRORS ==="
+          grep -n -E "error:|ERROR|FAILURE|Exception|cannot find symbol|does not exist|Could not" build.log | tail -n 100 || true
+
+          echo "=== LAST 300 LINES ==="
+          tail -n 300 build.log
+
+          exit $STATUS
+
+      - name: Upload complete Gradle log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gradle-complete-log
+          path: build.log
+          if-no-files-found: warn
 
       - name: Upload APK
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: adam-tunnel-app
