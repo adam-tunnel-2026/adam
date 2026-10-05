@@ -22,7 +22,6 @@ android {
 dependencies {
     compile 'com.android.support:appcompat-v7:27.1.1'
     compile 'net.i2p.crypto:eddsa:0.3.0'
-    compile 'org.connectbot:jbcrypt:1.0.2'
-    compile 'com.github.kimchangyoun:rootbeerFresh:+'
+    compile 'com.github.kimchangyoun:rootbeerFresh:0.0.7'
     compile project(':style')
 }
