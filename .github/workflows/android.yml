@@ -16,44 +16,32 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK 8
+      # 1. Configurar de forma nativa las herramientas del SDK antiguo usando una acción oficial
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          api-level: 28
+          build-tools: 28.0.3
+
+      # 2. Configurar JDK 8 para que el Gradle antiguo de la app pueda compilar
+      - name: Set up JDK 8 for Gradle
         uses: actions/setup-java@v4
         with:
           java-version: "8"
           distribution: "temurin"
 
-      - name: Configure Legacy Android SDK 28
+      # 3. Aplicar el parche de compatibilidad XML
+      - name: Apply Legacy Compatibility Patch
         shell: bash
         run: |
-          # 1. Usar el SDK base que ya viene preinstalado en el servidor de GitHub
-          export ORIGINAL_SDK="$ANDROID_HOME"
-          export CUSTOM_SDK="$GITHUB_WORKSPACE/android-sdk-custom"
-          
-          # 2. Clonar únicamente las herramientas del sistema esenciales
-          mkdir -p "$CUSTOM_SDK"
-          cp -r "$ORIGINAL_SDK/cmdline-tools" "$CUSTOM_SDK/cmdline-tools" || true
-          
-          # 3. Forzar la instalación local y limpia de las herramientas clásicas de 2018
-          export PATH="$CUSTOM_SDK/cmdline-tools/latest/bin:$PATH"
-          sdkmanager --sdk_root="$CUSTOM_SDK" --licenses > /dev/null || true
-          
-          echo "Descargando componentes heredados SDK 28..."
-          sdkmanager --sdk_root="$CUSTOM_SDK" "platforms;android-28" "build-tools;28.0.3" "platform-tools" > /dev/null
-          
-          # 4. Inyectar parche de compatibilidad XML para el plugin Gradle antiguo de SocksHttp
-          mkdir -p "$CUSTOM_SDK/platforms/android-28/data"
-          touch "$CUSTOM_SDK/platforms/android-28/data/layoutlib.data"
-          
-          echo "=== CONFIGURACION DE SDK COMPLETADA ==="
+          mkdir -p "$ANDROID_HOME/platforms/android-28/data"
+          touch "$ANDROID_HOME/platforms/android-28/data/layoutlib.data"
+          echo "Parche de compatibilidad aplicado correctamente."
 
+      # 4. Compilar la aplicación
       - name: Build APK
         shell: bash
         run: |
-          # Enlazar la compilación al entorno aislado libre de etiquetas modernas
-          export ANDROID_HOME="$GITHUB_WORKSPACE/android-sdk-custom"
-          export ANDROID_SDK_ROOT="$ANDROID_HOME"
-          export PATH="$ANDROID_HOME/platform-tools:$PATH"
-          
           chmod +x gradlew
           
           echo "=== VERIFICANDO ENTORNO ==="
