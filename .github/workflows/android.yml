@@ -10,7 +10,8 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    # Usamos el entorno más reciente y disponible de GitHub
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
