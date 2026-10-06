@@ -16,39 +16,63 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 1. Configurar de forma nativa las herramientas del SDK antiguo usando una acción oficial
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          api-level: 28
-          build-tools: 28.0.3
-
-      # 2. Configurar JDK 8 para que el Gradle antiguo de la app pueda compilar
       - name: Set up JDK 8 for Gradle
         uses: actions/setup-java@v4
         with:
           java-version: "8"
           distribution: "temurin"
 
-      # 3. Aplicar el parche de compatibilidad XML
-      - name: Apply Legacy Compatibility Patch
+      - name: Manual Clean Installation of Android SDK 28
         shell: bash
         run: |
+          # 1. Crear un directorio limpio y aislado para el SDK heredado
+          export ANDROID_HOME="$GITHUB_WORKSPACE/android-sdk-custom"
+          mkdir -p "$ANDROID_HOME/platforms"
+          mkdir -p "$ANDROID_HOME/build-tools"
+          mkdir -p "$ANDROID_HOME/platform-tools"
+
+          # 2. Descargar e instalar directamente la plataforma Android 28
+          echo "Descargando Android Platform 28..."
+          curl -sS https://google.com -o platform.zip
+          unzip -q platform.zip -d "$ANDROID_HOME/platforms"
+          mv "$ANDROID_HOME/platforms/android-9" "$ANDROID_HOME/platforms/android-28"
+
+          # 3. Descargar e instalar directamente las Build-Tools 28.0.3
+          echo "Descargando Build Tools 28.0.3..."
+          curl -sS https://google.com -o build-tools.zip
+          unzip -q build-tools.zip -d "$ANDROID_HOME/build-tools"
+          mv "$ANDROID_HOME/build-tools/android-9" "$ANDROID_HOME/build-tools/28.0.3"
+
+          # 4. Descargar e instalar las Platform-Tools básicas
+          echo "Descargando Platform Tools..."
+          curl -sS https://google.com -o platform-tools.zip
+          unzip -q platform-tools.zip -d "$ANDROID_HOME"
+
+          # 5. Inyectar el parche de compatibilidad XML para saltar el error original 'base-extension'
           mkdir -p "$ANDROID_HOME/platforms/android-28/data"
           touch "$ANDROID_HOME/platforms/android-28/data/layoutlib.data"
-          echo "Parche de compatibilidad aplicado correctamente."
 
-      # 4. Compilar la aplicación
+          echo "=== CONFIGURACION MANUAL DEL SDK COMPLETADA ==="
+
       - name: Build APK
         shell: bash
         run: |
+          # Vincular nuestro entorno limpio al compilador de Gradle
+          export ANDROID_HOME="$GITHUB_WORKSPACE/android-sdk-custom"
+          export ANDROID_SDK_ROOT="$ANDROID_HOME"
+          export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools/28.0.3:$PATH"
+
           chmod +x gradlew
-          
-          echo "=== VERIFICANDO ENTORNO ==="
+
+          echo "=== VERIFICANDO ENTORNO DE COMPILACION ==="
           java -version
           ./gradlew --version
-          
-          echo "=== EJECUTANDO COMPILACION ==="
+
+          echo "=== DETECTANDO COMPONENTES INSTALADOS ==="
+          test -d "$ANDROID_HOME/platforms/android-28" && echo "Platform 28: OK"
+          test -d "$ANDROID_HOME/build-tools/28.0.3" && echo "Build Tools 28.0.3: OK"
+
+          echo "=== EJECUTANDO COMPILACION DEL PROYECTO ==="
           ./gradlew assembleDebug -x test -x lint --stacktrace --info
 
       - name: Upload APK
