@@ -10,7 +10,6 @@ on:
 
 jobs:
   build:
-    # Usamos el entorno más reciente y disponible de GitHub
     runs-on: ubuntu-latest
 
     steps:
@@ -23,32 +22,34 @@ jobs:
           java-version: "8"
           distribution: "temurin"
 
-      - name: Install and Force Legacy Android SDK 28
+      - name: Configure Legacy Android SDK 28
         shell: bash
         run: |
-          export ANDROID_HOME="$GITHUB_WORKSPACE/android-sdk-custom"
-          mkdir -p "$ANDROID_HOME/cmdline-tools"
+          # 1. Usar el SDK base que ya viene preinstalado en el servidor de GitHub
+          export ORIGINAL_SDK="$ANDROID_HOME"
+          export CUSTOM_SDK="$GITHUB_WORKSPACE/android-sdk-custom"
           
-          curl -sS https://google.com -o commandlinetools.zip
-          unzip -q commandlinetools.zip -d "$ANDROID_HOME/cmdline-tools"
-          mv "$ANDROID_HOME/cmdline-tools/cmdline-tools" "$ANDROID_HOME/cmdline-tools/latest"
+          # 2. Clonar únicamente las herramientas del sistema esenciales
+          mkdir -p "$CUSTOM_SDK"
+          cp -r "$ORIGINAL_SDK/cmdline-tools" "$CUSTOM_SDK/cmdline-tools" || true
           
-          export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
-          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          # 3. Forzar la instalación local y limpia de las herramientas clásicas de 2018
+          export PATH="$CUSTOM_SDK/cmdline-tools/latest/bin:$PATH"
+          sdkmanager --sdk_root="$CUSTOM_SDK" --licenses > /dev/null || true
           
-          yes | $SDKMANAGER --licenses > /dev/null || true
+          echo "Descargando componentes heredados SDK 28..."
+          sdkmanager --sdk_root="$CUSTOM_SDK" "platforms;android-28" "build-tools;28.0.3" "platform-tools" > /dev/null
           
-          echo "Instalando Platform 28 y Build Tools 28.0.3..."
-          $SDKMANAGER "platforms;android-28" "build-tools;28.0.3" "platform-tools" > /dev/null
-          
-          mkdir -p "$ANDROID_HOME/platforms/android-28/data"
-          touch "$ANDROID_HOME/platforms/android-28/data/layoutlib.data"
+          # 4. Inyectar parche de compatibilidad XML para el plugin Gradle antiguo de SocksHttp
+          mkdir -p "$CUSTOM_SDK/platforms/android-28/data"
+          touch "$CUSTOM_SDK/platforms/android-28/data/layoutlib.data"
           
           echo "=== CONFIGURACION DE SDK COMPLETADA ==="
 
       - name: Build APK
         shell: bash
         run: |
+          # Enlazar la compilación al entorno aislado libre de etiquetas modernas
           export ANDROID_HOME="$GITHUB_WORKSPACE/android-sdk-custom"
           export ANDROID_SDK_ROOT="$ANDROID_HOME"
           export PATH="$ANDROID_HOME/platform-tools:$PATH"
