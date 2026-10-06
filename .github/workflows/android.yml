@@ -27,36 +27,36 @@ jobs:
         shell: bash
         run: |
           export SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
-          
+
           echo "=== ACEPTANDO TODAS LAS LICENCIAS DE GOOGLE ==="
           # Usamos un bucle continuo seguro para evitar el error de Broken pipe
           (echo y; echo y; echo y; echo y; echo y; echo y; echo y) | $SDKMANAGER --licenses || true
-          
+
           echo "=== INSTALANDO PLATAFORMA 28 Y BUILD-TOOLS 28.0.3 ==="
           $SDKMANAGER "platforms;android-28" "build-tools;28.0.3" "platform-tools"
-          
+
           # 2. Aplicar el parche de compatibilidad contra el error 'base-extension'
           mkdir -p "$ANDROID_HOME/platforms/android-28/data"
           touch "$ANDROID_HOME/platforms/android-28/data/layoutlib.data"
-          
+
           echo "=== SDK CONFIGURADO CON EXITO ==="
 
-      # 3. Cambiar a JDK 8 para compilar tu proyecto heredado
-      - name: Set up JDK 8 for Gradle Build
+      # 3. Cambiar a JDK 11 (requerido por Android Gradle Plugin 7.x)
+      - name: Set up JDK 11 for Gradle Build
         uses: actions/setup-java@v4
         with:
-          java-version: "8"
+          java-version: "11"
           distribution: "temurin"
 
       - name: Build APK
         shell: bash
         run: |
           chmod +x gradlew
-          
+
           echo "=== VERIFICANDO ENTORNO ==="
           java -version
           ./gradlew --version
-          
+
           echo "=== INICIANDO COMPILACION ==="
           ./gradlew assembleDebug -x test -x lint --stacktrace --info
 
