@@ -16,7 +16,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 1. Configurar JDK moderno temporalmente SOLO para aceptar las licencias e instalar los componentes antiguos
+      # 1. Configurar JDK moderno temporalmente para las herramientas del SDK
       - name: Set up JDK 17 for SDK Manager
         uses: actions/setup-java@v4
         with:
@@ -26,22 +26,22 @@ jobs:
       - name: Install Android SDK 28 Cleanly
         shell: bash
         run: |
-          # Localizar las herramientas preinstaladas de GitHub Actions
           export SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
           
           echo "=== ACEPTANDO TODAS LAS LICENCIAS DE GOOGLE ==="
-          yes | $SDKMANAGER --licenses > /dev/null || true
+          # Usamos un bucle continuo seguro para evitar el error de Broken pipe
+          (echo y; echo y; echo y; echo y; echo y; echo y; echo y) | $SDKMANAGER --licenses || true
           
           echo "=== INSTALANDO PLATAFORMA 28 Y BUILD-TOOLS 28.0.3 ==="
-          yes | $SDKMANAGER "platforms;android-28" "build-tools;28.0.3" "platform-tools" > /dev/null
+          $SDKMANAGER "platforms;android-28" "build-tools;28.0.3" "platform-tools"
           
-          # 2. Aplicar el parche de compatibilidad contra el error 'base-extension' de tu Gradle antiguo
+          # 2. Aplicar el parche de compatibilidad contra el error 'base-extension'
           mkdir -p "$ANDROID_HOME/platforms/android-28/data"
           touch "$ANDROID_HOME/platforms/android-28/data/layoutlib.data"
           
           echo "=== SDK CONFIGURADO CON EXITO ==="
 
-      # 3. Cambiar a JDK 8, requerido obligatoriamente para compilar este proyecto clásico
+      # 3. Cambiar a JDK 8 para compilar tu proyecto heredado
       - name: Set up JDK 8 for Gradle Build
         uses: actions/setup-java@v4
         with:
