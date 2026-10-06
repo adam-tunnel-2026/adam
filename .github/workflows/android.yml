@@ -16,26 +16,33 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 1. Configurar el SDK mediante el método oficial y actualizado
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      # 1. Configurar JDK moderno temporalmente SOLO para aceptar las licencias e instalar los componentes antiguos
+      - name: Set up JDK 17 for SDK Manager
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
 
-      # 2. Descargar de forma nativa los componentes clásicos usando el sdkmanager correcto
-      - name: Install Android 28 Components
+      - name: Install Android SDK 28 Cleanly
         shell: bash
         run: |
-          sdkmanager "platforms;android-28" "build-tools;28.0.3" "platform-tools"
-
-      # 3. Forzar el aislamiento del entorno inyectando el parche contra 'base-extension'
-      - name: Apply Compatibility Patch
-        shell: bash
-        run: |
+          # Localizar las herramientas preinstaladas de GitHub Actions
+          export SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          
+          echo "=== ACEPTANDO TODAS LAS LICENCIAS DE GOOGLE ==="
+          yes | $SDKMANAGER --licenses > /dev/null || true
+          
+          echo "=== INSTALANDO PLATAFORMA 28 Y BUILD-TOOLS 28.0.3 ==="
+          yes | $SDKMANAGER "platforms;android-28" "build-tools;28.0.3" "platform-tools" > /dev/null
+          
+          # 2. Aplicar el parche de compatibilidad contra el error 'base-extension' de tu Gradle antiguo
           mkdir -p "$ANDROID_HOME/platforms/android-28/data"
           touch "$ANDROID_HOME/platforms/android-28/data/layoutlib.data"
-          echo "Parche de compatibilidad estructural aplicado."
+          
+          echo "=== SDK CONFIGURADO CON EXITO ==="
 
-      # 4. Compilar con JDK 8 de principio a fin para la app clásica
-      - name: Set up JDK 8 for Gradle
+      # 3. Cambiar a JDK 8, requerido obligatoriamente para compilar este proyecto clásico
+      - name: Set up JDK 8 for Gradle Build
         uses: actions/setup-java@v4
         with:
           java-version: "8"
@@ -45,12 +52,12 @@ jobs:
         shell: bash
         run: |
           chmod +x gradlew
-
+          
           echo "=== VERIFICANDO ENTORNO ==="
           java -version
           ./gradlew --version
-
-          echo "=== EJECUTANDO COMPILACION ==="
+          
+          echo "=== INICIANDO COMPILACION ==="
           ./gradlew assembleDebug -x test -x lint --stacktrace --info
 
       - name: Upload APK
