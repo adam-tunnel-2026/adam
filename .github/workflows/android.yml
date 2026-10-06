@@ -36,6 +36,14 @@ jobs:
           echo "=== ACCEPT LICENSES ==="
           yes | "$SDKMANAGER" --sdk_root="$ANDROID_SDK_ROOT" --licenses || true
 
+          echo "=== REMOVE MODERN SDK PLATFORMS ==="
+          rm -rf "$ANDROID_SDK_ROOT/platforms"
+          rm -rf "$ANDROID_SDK_ROOT/build-tools"
+
+          echo "=== CREATE CLEAN SDK DIRECTORIES ==="
+          mkdir -p "$ANDROID_SDK_ROOT/platforms"
+          mkdir -p "$ANDROID_SDK_ROOT/build-tools"
+
           echo "=== INSTALL ANDROID 28 ==="
           "$SDKMANAGER" --sdk_root="$ANDROID_SDK_ROOT" \
             "platforms;android-28" \
@@ -74,6 +82,13 @@ jobs:
           echo "=== CHECK BUILD TOOLS 28.0.3 ==="
           test -d "$ANDROID_SDK_ROOT/build-tools/28.0.3"
           echo "Build Tools 28.0.3 OK"
+
+          echo "=== CHECK NO ANDROID 37 ==="
+          if [ -d "$ANDROID_SDK_ROOT/platforms/android-37.0" ]; then
+            echo "ERROR: Android 37.0 still exists"
+            exit 1
+          fi
+          echo "No Android 37.0 detected"
 
           echo "=== BUILD APK ==="
           ./gradlew assembleDebug --stacktrace --info
