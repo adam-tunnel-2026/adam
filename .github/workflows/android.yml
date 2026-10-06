@@ -25,30 +25,30 @@ jobs:
       - name: Manual Clean Installation of Android SDK 28
         shell: bash
         run: |
-          # 1. Crear un directorio limpio y aislado para el SDK heredado
+          # 1. Crear directorios aislados y limpios para evitar herramientas modernas
           export ANDROID_HOME="$GITHUB_WORKSPACE/android-sdk-custom"
           mkdir -p "$ANDROID_HOME/platforms"
           mkdir -p "$ANDROID_HOME/build-tools"
           mkdir -p "$ANDROID_HOME/platform-tools"
 
-          # 2. Descargar e instalar directamente la plataforma Android 28
+          # 2. Descargar de forma estática la plataforma Android 28 usando wget
           echo "Descargando Android Platform 28..."
-          curl -sS https://google.com -o platform.zip
+          wget -q --show-progress https://dl.google.com/android/repository/platform-28_r04.zip -O platform.zip
           unzip -q platform.zip -d "$ANDROID_HOME/platforms"
           mv "$ANDROID_HOME/platforms/android-9" "$ANDROID_HOME/platforms/android-28"
 
-          # 3. Descargar e instalar directamente las Build-Tools 28.0.3
+          # 3. Descargar las herramientas de compilación clásicas 28.0.3
           echo "Descargando Build Tools 28.0.3..."
-          curl -sS https://google.com -o build-tools.zip
+          wget -q --show-progress https://google.com -O build-tools.zip
           unzip -q build-tools.zip -d "$ANDROID_HOME/build-tools"
           mv "$ANDROID_HOME/build-tools/android-9" "$ANDROID_HOME/build-tools/28.0.3"
 
-          # 4. Descargar e instalar las Platform-Tools básicas
+          # 4. Descargar Platform Tools para la estructura correcta
           echo "Descargando Platform Tools..."
-          curl -sS https://google.com -o platform-tools.zip
+          wget -q --show-progress https://google.com -O platform-tools.zip
           unzip -q platform-tools.zip -d "$ANDROID_HOME"
 
-          # 5. Inyectar el parche de compatibilidad XML para saltar el error original 'base-extension'
+          # 5. Parche manual contra el error de estructura XML 'base-extension'
           mkdir -p "$ANDROID_HOME/platforms/android-28/data"
           touch "$ANDROID_HOME/platforms/android-28/data/layoutlib.data"
 
@@ -57,22 +57,18 @@ jobs:
       - name: Build APK
         shell: bash
         run: |
-          # Vincular nuestro entorno limpio al compilador de Gradle
+          # Declarar las variables apuntando a nuestro SDK libre de elementos modernos
           export ANDROID_HOME="$GITHUB_WORKSPACE/android-sdk-custom"
           export ANDROID_SDK_ROOT="$ANDROID_HOME"
           export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools/28.0.3:$PATH"
 
           chmod +x gradlew
 
-          echo "=== VERIFICANDO ENTORNO DE COMPILACION ==="
+          echo "=== VERIFICANDO ENTORNO ==="
           java -version
           ./gradlew --version
 
-          echo "=== DETECTANDO COMPONENTES INSTALADOS ==="
-          test -d "$ANDROID_HOME/platforms/android-28" && echo "Platform 28: OK"
-          test -d "$ANDROID_HOME/build-tools/28.0.3" && echo "Build Tools 28.0.3: OK"
-
-          echo "=== EJECUTANDO COMPILACION DEL PROYECTO ==="
+          echo "=== COMPILANDO APLICACION SOCKSHTTP ==="
           ./gradlew assembleDebug -x test -x lint --stacktrace --info
 
       - name: Upload APK
