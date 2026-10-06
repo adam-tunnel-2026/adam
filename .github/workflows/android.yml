@@ -16,54 +16,41 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # 1. Configurar el SDK mediante el método oficial y actualizado
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      # 2. Descargar de forma nativa los componentes clásicos usando el sdkmanager correcto
+      - name: Install Android 28 Components
+        shell: bash
+        run: |
+          sdkmanager "platforms;android-28" "build-tools;28.0.3" "platform-tools"
+
+      # 3. Forzar el aislamiento del entorno inyectando el parche contra 'base-extension'
+      - name: Apply Compatibility Patch
+        shell: bash
+        run: |
+          mkdir -p "$ANDROID_HOME/platforms/android-28/data"
+          touch "$ANDROID_HOME/platforms/android-28/data/layoutlib.data"
+          echo "Parche de compatibilidad estructural aplicado."
+
+      # 4. Compilar con JDK 8 de principio a fin para la app clásica
       - name: Set up JDK 8 for Gradle
         uses: actions/setup-java@v4
         with:
           java-version: "8"
           distribution: "temurin"
 
-      - name: Local Copy and Isolation of Android SDK 28
-        shell: bash
-        run: |
-          # 1. Definir rutas (Usando el SDK que ya viene instalado de fábrica en GitHub)
-          export ORIGINAL_SDK="$ANDROID_HOME"
-          export CUSTOM_SDK="$GITHUB_WORKSPACE/android-sdk-custom"
-
-          echo "=== CONFIGURANDO ENTORNO AISLADO ==="
-          mkdir -p "$CUSTOM_SDK/platforms"
-          mkdir -p "$CUSTOM_SDK/build-tools"
-
-          # 2. Copiar de forma local las carpetas exactas (Evita descargar nada de internet)
-          echo "Copiando Plataforma Android 28 local..."
-          cp -r "$ORIGINAL_SDK/platforms/android-28" "$CUSTOM_SDK/platforms/"
-
-          echo "Copiando Herramientas de Compilación 28.0.3 locales..."
-          cp -r "$ORIGINAL_SDK/build-tools/28.0.3" "$CUSTOM_SDK/build-tools/"
-
-          echo "Copiando Platform Tools locales..."
-          cp -r "$ORIGINAL_SDK/platform-tools" "$CUSTOM_SDK/"
-
-          # 3. Inyectar el parche manual contra el error estructural XML 'base-extension'
-          mkdir -p "$CUSTOM_SDK/platforms/android-28/data"
-          touch "$CUSTOM_SDK/platforms/android-28/data/layoutlib.data"
-
-          echo "=== CONFIGURACION LOCAL COMPLETADA CON EXITO ==="
-
       - name: Build APK
         shell: bash
         run: |
-          # Enlazar las variables del sistema únicamente a nuestro SDK aislado
-          export ANDROID_HOME="$GITHUB_WORKSPACE/android-sdk-custom"
-          export ANDROID_SDK_ROOT="$ANDROID_HOME"
-          export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools/28.0.3:$PATH"
-
           chmod +x gradlew
 
-          echo "=== VERIFICANDO ENTORNO DE COMPILACION ==="
+          echo "=== VERIFICANDO ENTORNO ==="
           java -version
           ./gradlew --version
 
-          echo "=== COMPILANDO APLICACION SOCKSHTTP ==="
+          echo "=== EJECUTANDO COMPILACION ==="
           ./gradlew assembleDebug -x test -x lint --stacktrace --info
 
       - name: Upload APK
