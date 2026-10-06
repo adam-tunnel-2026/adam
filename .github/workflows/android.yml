@@ -1,4 +1,5 @@
 name: Android CI
+
 on:
   push:
     branches:
@@ -6,9 +7,11 @@ on:
   pull_request:
     branches:
       - master
+
 jobs:
   build:
     runs-on: ubuntu-22.04
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,22 +27,29 @@ jobs:
         run: |
           export ANDROID_SDK_ROOT="/usr/local/lib/android/sdk"
           export ANDROID_HOME="/usr/local/lib/android/sdk"
+
           SDKMANAGER="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+
           echo "=== JAVA FOR SDKMANAGER ==="
           java -version
+
           echo "=== ACCEPT LICENSES ==="
           yes | "$SDKMANAGER" --sdk_root="$ANDROID_SDK_ROOT" --licenses || true
+
           echo "=== REMOVE MODERN SDK PLATFORMS ==="
           rm -rf "$ANDROID_SDK_ROOT/platforms"
           rm -rf "$ANDROID_SDK_ROOT/build-tools"
+
           echo "=== CREATE CLEAN SDK DIRECTORIES ==="
           mkdir -p "$ANDROID_SDK_ROOT/platforms"
           mkdir -p "$ANDROID_SDK_ROOT/build-tools"
+
           echo "=== INSTALL ANDROID 28 ==="
           "$SDKMANAGER" --sdk_root="$ANDROID_SDK_ROOT" \
             "platforms;android-28" \
             "build-tools;28.0.3" \
             "platform-tools"
+
           echo "=== SDK INSTALLATION COMPLETE ==="
 
       - name: Set up JDK 8 for Gradle
@@ -53,25 +63,37 @@ jobs:
         run: |
           export ANDROID_SDK_ROOT="/usr/local/lib/android/sdk"
           export ANDROID_HOME="$ANDROID_SDK_ROOT"
-          export JAVA_HOME="${{ env.JAVA_HOME }}"
+
+          export JAVA_HOME="/opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/8.0.504-1/x64"
           export PATH="$JAVA_HOME/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH"
+
           chmod +x gradlew
+
+          echo "=== ELIMINAR API 37 ==="
+          rm -rf "$ANDROID_SDK_ROOT/platforms/android-37.0"
+
           echo "=== JAVA PARA GRADLE ==="
           java -version
+
           echo "=== GRADLE VERSION ==="
           ./gradlew --version
+
           echo "=== CHECK API 28 ==="
           test -d "$ANDROID_SDK_ROOT/platforms/android-28"
           echo "API 28 OK"
+
           echo "=== CHECK BUILD TOOLS 28.0.3 ==="
           test -d "$ANDROID_SDK_ROOT/build-tools/28.0.3"
           echo "Build Tools 28.0.3 OK"
+
           echo "=== CHECK NO ANDROID 37 ==="
           if [ -d "$ANDROID_SDK_ROOT/platforms/android-37.0" ]; then
             echo "ERROR: Android 37.0 still exists - limpieza fallida"
             exit 1
           fi
-          echo "No Android 37.0 detectado ✅"
+
+          echo "No Android 37.0 detectado"
+
           echo "=== BUILD APK ==="
           ./gradlew assembleDebug --stacktrace --info
 
