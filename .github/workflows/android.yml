@@ -16,36 +16,32 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Forzamos Java 8 para que incluya las librerías javax.xml eliminadas en versiones nuevas
-      - name: Set up JDK 8
+      # 1. Usamos una acción oficial estable para instalar el SDK sin comandos conflictivos
+      - name: Setup Android SDK Environment
+        uses: android-actions/setup-android@v3
+
+      # 2. Descargamos la plataforma antigua usando una sintaxis que no traba las licencias
+      - name: Aprovisionar Android SDK 28
+        run: |
+          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-28" "build-tools;28.0.3" "platform-tools"
+
+      # 3. Aplicamos el parche de compatibilidad para tu Gradle antiguo
+      - name: Apply Patch
+        run: |
+          mkdir -p "$ANDROID_HOME/platforms/android-28/data"
+          touch "$ANDROID_HOME/platforms/android-28/data/layoutlib.data"
+
+      # 4. Ponemos Java 8 JUSTO ANTES de compilar para evitar el fallo de javax.xml
+      - name: Set up JDK 8 for Legacy Build
         uses: actions/setup-java@v4
         with:
           java-version: "8"
           distribution: "temurin"
 
-      # Instalamos de forma limpia los componentes del SDK necesarios
-      - name: Install Android SDK Components
-        shell: bash
-        run: |
-          export SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
-          echo "=== ACEPTANDO LICENCIAS ==="
-          (echo y; echo y; echo y; echo y) | $SDKMANAGER --licenses || true
-          echo "=== INSTALANDO PLATAFORMA ==="
-          $SDKMANAGER "platforms;android-28" "build-tools;28.0.3" "platform-tools"
-
-      # Aplicamos el parche contra el error 'base-extension' de tu Gradle antiguo
-      - name: Apply Compatibility Patch
-        shell: bash
-        run: |
-          mkdir -p "$ANDROID_HOME/platforms/android-28/data"
-          touch "$ANDROID_HOME/platforms/android-28/data/layoutlib.data"
-
-      # Compilación final del APK
+      # 5. Compilación del APK final de SocksHttp
       - name: Build APK
-        shell: bash
         run: |
           chmod +x gradlew
-          echo "=== COMPILANDO APLICACION SOCKSHTTP ==="
           ./gradlew assembleDebug -x test -x lint --stacktrace --info
 
       - name: Upload APK
